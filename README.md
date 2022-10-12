@@ -4,11 +4,13 @@
 ## Usage
 
 -Facilite et gère la connexion wifi
+
 -Permet la création d'un index
+
 -Permet de stocker des données dans la mémoire flash (SPIFFS)
 
 
-## Credits
+## Nécessité
 
 Nécessite les 3 bibliothèques:
 
@@ -22,7 +24,7 @@ ArduinoJson
 https://github.com/bblanchon/ArduinoJson
 
 
-## Website
+## Documentation
 
 https://sites.google.com/view/eebud-server-manager/accueil
 
