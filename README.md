@@ -1,5 +1,21 @@
 # Bibliothèque ESP32
 
+## Nouveautés
+Version: 1.1
+  -Ajout de fonctions:
+  
+    -IndexAddTitle
+    -IndexAddColor
+    -IndexAddRange
+    -IndexAddHTML
+    -IndexBackgraoundStart
+    -IndexBackgroundFinish
+    -IndexAddSegWhite
+    -IndexGetRange
+    -IndexGetColor_R _G _B
+    
+  -Corrections de bugs.
+
 
 ## Usage
 
