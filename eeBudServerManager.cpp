@@ -6,6 +6,7 @@
 #include <HTTPClient.h>
 #include <DNSServer.h>
 
+
 #include "eeBudServerManager.h"
 #include "SPIFFS_Process.h"
 #include "HTML_Config.h"
@@ -46,7 +47,7 @@ bool DNS = false;
 DNSServer dnsServer;
 
 //Json Action
-DynamicJsonDocument SPIFFS_Config_Actions(1024);
+DynamicJsonDocument SPIFFS_Config_Actions(4096);
 int Action = -1;
 
 String ScriptConstruct = "";
@@ -193,10 +194,69 @@ void eeBudServerManager::ServeurStation() {
   });
   server.serveStatic("/", SPIFFS, "/");
 
+
+
   server.on("/update", HTTP_POST, [](AsyncWebServerRequest* request) {
     AsyncWebParameter* p = request->getParam(0);
     if (String(p->name().c_str()) == "send") {
       Action = String(p->value().c_str()).toInt();
+    } else if (String(p->name().c_str()) == "send_color") {
+      Action = String(p->value().c_str()).toInt();
+      String SNom = String(p->value().c_str());
+      String ID = String(p->value().c_str());
+      JsonArray Actions = SPIFFS_Config_Actions["actions"];
+      for (int i = 0; i < Actions.size(); i++) {
+        if (SPIFFS_Config_Actions["actions"][i]["id"].as<String>() == ID) {
+          p = request->getParam(1);
+          int R = (String(p->value().c_str())).toInt();
+          SPIFFS_Config_Actions["actions"][i]["r"] = String(p->value().c_str());
+          p = request->getParam(2);
+          int G = (String(p->value().c_str())).toInt();
+          SPIFFS_Config_Actions["actions"][i]["g"] = String(p->value().c_str());
+          p = request->getParam(3);
+          int B = (String(p->value().c_str())).toInt();
+          SPIFFS_Config_Actions["actions"][i]["b"] = String(p->value().c_str());
+
+          char CNom[50];
+          SNom.toCharArray(CNom, 50);
+          long r = 0;
+          r = (long)R;
+          long g = 0;
+          g = (long)G;
+          long b = 0;
+          b = (long)B;
+
+          String SValue = "#000000";
+          char CValue[7];
+          sprintf(CValue, "#%02x%02x%02x", r, g, b);
+
+          events.send(CValue, CNom, millis());
+
+          break;
+        }
+        delay(10);
+      }
+
+    } else if (String(p->name().c_str()) == "send_range") {
+      Action = String(p->value().c_str()).toInt();
+      String ID = String(p->value().c_str());
+      JsonArray Actions = SPIFFS_Config_Actions["actions"];
+      for (int i = 0; i < Actions.size(); i++) {
+        if (SPIFFS_Config_Actions["actions"][i]["id"].as<String>() == ID) {
+          String SNom = String(p->value().c_str());
+          p = request->getParam(1);
+          SPIFFS_Config_Actions["actions"][i]["value"] = String(p->value().c_str());
+
+          char CNom[50];
+          SNom.toCharArray(CNom, 50);
+          char CValue[50];
+          String SValue = String(p->value().c_str());
+          SValue.toCharArray(CValue, 50);
+          events.send(CValue, CNom, millis());
+          break;
+        }
+        delay(10);
+      }
     }
   });
 
@@ -247,6 +307,62 @@ void eeBudServerManager::ServeurStation() {
             request->send(200, "text/plain", "OK");
             break;
           }
+        }
+      } else if (String(p->name().c_str()) == "color") {
+        Action = String(p->value().c_str()).toInt();
+        String ID = String(p->value().c_str());
+        JsonArray Actions = SPIFFS_Config_Actions["actions"];
+        for (int i = 0; i < Actions.size(); i++) {
+          if (SPIFFS_Config_Actions["actions"][i]["id"].as<String>() == ID) {
+            String SNom = String(p->value().c_str());
+            p = request->getParam(2);
+            SPIFFS_Config_Actions["actions"][i]["r"] = String(p->value().c_str());
+            int R = (String(p->value().c_str())).toInt();
+            p = request->getParam(3);
+            SPIFFS_Config_Actions["actions"][i]["g"] = String(p->value().c_str());
+            int G = (String(p->value().c_str())).toInt();
+            p = request->getParam(4);
+            SPIFFS_Config_Actions["actions"][i]["b"] = String(p->value().c_str());
+            int B = (String(p->value().c_str())).toInt();
+
+            char CNom[50];
+            SNom.toCharArray(CNom, 50);
+            long r = 0;
+            r = (long)R;
+            long g = 0;
+            g = (long)G;
+            long b = 0;
+            b = (long)B;
+
+            String SValue = "#000000";
+            char CValue[7];
+            sprintf(CValue, "#%02x%02x%02x", r, g, b);
+
+            events.send(CValue, CNom, millis());
+            request->send(200, "text/plain", "OK");
+            break;
+          }
+          delay(10);
+        }
+      } else if (String(p->name().c_str()) == "range") {
+        Action = String(p->value().c_str()).toInt();
+        String ID = String(p->value().c_str());
+        JsonArray Actions = SPIFFS_Config_Actions["actions"];
+        for (int i = 0; i < Actions.size(); i++) {
+          if (SPIFFS_Config_Actions["actions"][i]["id"].as<String>() == ID) {
+            String SNom = String(p->value().c_str());
+            p = request->getParam(2);
+            SPIFFS_Config_Actions["actions"][i]["value"] = String(p->value().c_str());
+
+            char CNom[50];
+            SNom.toCharArray(CNom, 50);
+            char CValue[50];
+            String SValue = String(p->value().c_str());
+            SValue.toCharArray(CValue, 50);
+            events.send(CValue, CNom, millis());
+            break;
+          }
+          delay(10);
         }
       }
     }
@@ -463,6 +579,45 @@ void eeBudServerManager::ServeurStation() {
             Retour += "<br>";
             Retour += "GET: <a href=\"http://" + StringAdresseIP + "/get?key=" + Pass + "&info=" + ID + "\">http://" + StringAdresseIP + "/get?key=" + Pass + "&info=" + ID + "</a>";
             Retour += "<br>";
+            Retour += "</div>";
+            Retour += "<br>";
+          
+          }else if (SPIFFS_Config_Actions["actions"][i]["type"].as<String>() == "color") {
+            String Nom = SPIFFS_Config_Actions["actions"][i]["nom"].as<String>();
+            String ID = SPIFFS_Config_Actions["actions"][i]["id"].as<String>();
+            String Pass = SPIFFS_Config_Reseau["ap"][0]["pass"].as<String>();
+
+            Retour += "<div class=\"FondCadre\">";
+            Retour += "Nom: <b>" + Nom + "</b>";
+            Retour += "<br>";
+            Retour += "Type: <b>Color</b>";
+            Retour += "<br>";
+            Retour += "ID: <b>" + ID;
+            Retour += "</b><br>";
+            Retour += "<br>POST: ";
+            Retour += "<a href=\"http://" + StringAdresseIP + "/update?key=" + Pass + "&color=" + ID + "&r=255&g=0&b=0\">http://" + StringAdresseIP + "/update?key=" + Pass + "&color=" + ID + "&r=255&g=0&b=0</a>";
+            Retour += "<br>";
+            //Retour += "GET: <a href=\"http://" + StringAdresseIP + "/get?key=" + Pass + "&info=" + ID + "\">http://" + StringAdresseIP + "/get?key=" + Pass + "&info=" + ID + "</a>";
+            //Retour += "<br>";
+            Retour += "</div>";
+            Retour += "<br>";
+          } else if (SPIFFS_Config_Actions["actions"][i]["type"].as<String>() == "range") {
+            String Nom = SPIFFS_Config_Actions["actions"][i]["nom"].as<String>();
+            String ID = SPIFFS_Config_Actions["actions"][i]["id"].as<String>();
+            String Pass = SPIFFS_Config_Reseau["ap"][0]["pass"].as<String>();
+
+            Retour += "<div class=\"FondCadre\">";
+            Retour += "Nom: <b>" + Nom + "</b>";
+            Retour += "<br>";
+            Retour += "Type: <b>Range</b>";
+            Retour += "<br>";
+            Retour += "ID: <b>" + ID;
+            Retour += "</b><br>";
+            Retour += "<br>POST: ";
+            Retour += "<a href=\"http://" + StringAdresseIP + "/update?key=" + Pass + "&range=" + ID + "&value=75\">http://" + StringAdresseIP + "/update?key=" + Pass + "&range=" + ID + "&value=75</a>";
+            Retour += "<br>";
+            //Retour += "GET: <a href=\"http://" + StringAdresseIP + "/get?key=" + Pass + "&info=" + ID + "\">http://" + StringAdresseIP + "/get?key=" + Pass + "&info=" + ID + "</a>";
+            //Retour += "<br>";
             Retour += "</div>";
             Retour += "<br>";
           }
@@ -757,6 +912,13 @@ void eeBudServerManager::IndexAddSeg() {
   Action["type"] = "eeSeg";
 }
 
+void eeBudServerManager::IndexAddSegWhite() {
+  JsonArray Actions = SPIFFS_Config_Actions["actions"];
+  JsonObject Action = Actions.createNestedObject();
+  Action["nom"] = "eeSegw";
+  Action["type"] = "eeSegw";
+}
+
 int eeBudServerManager::IndexAddButton(String Name) {
   JsonArray Actions = SPIFFS_Config_Actions["actions"];
   JsonObject Action = Actions.createNestedObject();
@@ -765,6 +927,44 @@ int eeBudServerManager::IndexAddButton(String Name) {
   Action["nom"] = Name;
   Action["type"] = "bouton";
   return IDAction - 1;
+}
+
+void eeBudServerManager::IndexAddTitle(String Name, String Size) {
+  JsonArray Actions = SPIFFS_Config_Actions["actions"];
+  JsonObject Action = Actions.createNestedObject();
+  Action["id"] = IDAction;
+  IDAction++;
+  Action["nom"] = Name;
+  Action["type"] = "title";
+  Action["size"] = Size;
+  //return IDAction - 1;
+}
+
+int eeBudServerManager::IndexAddRange(String Name, int Min, int Max, int Default) {
+  JsonArray Actions = SPIFFS_Config_Actions["actions"];
+  JsonObject Action = Actions.createNestedObject();
+  Action["id"] = IDAction;
+  IDAction++;
+  Action["nom"] = Name;
+  Action["type"] = "range";
+  Action["value"] = Default;
+  Action["min"] = Min;
+  Action["max"] = Max;
+  return IDAction - 1;
+}
+
+int eeBudServerManager::IndexGetRange(int ID) {
+  int Val = 0;
+  JsonArray Actions = SPIFFS_Config_Actions["actions"];
+  for (int i = 0; i < Actions.size(); i++) {
+    if (SPIFFS_Config_Actions["actions"][i]["id"].as<String>() == String(ID) && SPIFFS_Config_Actions["actions"][i]["type"].as<String>() == "range") {
+      Val = SPIFFS_Config_Actions["actions"][i]["value"].as<String>().toInt();
+      return Val;
+      break;
+    }
+    delay(10);
+  }
+  return Val;
 }
 
 int eeBudServerManager::IndexAddInfo(String Name, String Unit, String Size) {
@@ -796,6 +996,94 @@ void eeBudServerManager::IndexSetInfo(int ID, String Value) {
     delay(10);
   }
 }
+
+void eeBudServerManager::IndexAddHTML(String Value) {
+  JsonArray Actions = SPIFFS_Config_Actions["actions"];
+  JsonObject Action = Actions.createNestedObject();
+  Action["id"] = IDAction;
+  IDAction++;
+  Action["value"] = Value;
+  Action["type"] = "html"; 
+}
+
+void eeBudServerManager::IndexBackgroundStart() {
+  JsonArray Actions = SPIFFS_Config_Actions["actions"];
+  JsonObject Action = Actions.createNestedObject();
+  Action["id"] = IDAction;
+  IDAction++;
+  Action["value"] = "<div class=\"FondCouleur\" style=\"margin-top:30px; margin-left:10px; margin-right:10px; padding-top:1px; border-radius:20px;\">";
+  Action["type"] = "html"; 
+}
+
+void eeBudServerManager::IndexBackgroundFinish() {
+  JsonArray Actions = SPIFFS_Config_Actions["actions"];
+  JsonObject Action = Actions.createNestedObject();
+  Action["id"] = IDAction;
+  IDAction++;
+  Action["value"] = "</div>";
+  Action["type"] = "html"; 
+}
+
+int eeBudServerManager::IndexAddColor(String Name, int Default_R, int Default_G, int Default_B) {
+  JsonArray Actions = SPIFFS_Config_Actions["actions"];
+  JsonObject Action = Actions.createNestedObject();
+  Action["id"] = IDAction;
+  IDAction++;
+  Action["nom"] = Name;
+  Action["type"] = "color";
+  Action["r"] = String(Default_R);
+  Action["g"] = String(Default_G);
+  Action["b"] = String(Default_B);
+  return IDAction - 1;
+}
+
+
+
+
+
+int eeBudServerManager::IndexGetColor_R(int ID) {
+  int Val = 0;
+  JsonArray Actions = SPIFFS_Config_Actions["actions"];
+  for (int i = 0; i < Actions.size(); i++) {
+    if (SPIFFS_Config_Actions["actions"][i]["id"].as<String>() == String(ID) && SPIFFS_Config_Actions["actions"][i]["type"].as<String>() == "color") {
+      Val = SPIFFS_Config_Actions["actions"][i]["r"].as<String>().toInt();
+      return Val;
+      break;
+    }
+    delay(10);
+  }
+  return Val;
+}
+
+int eeBudServerManager::IndexGetColor_G(int ID) {
+  int Val = 0;
+  JsonArray Actions = SPIFFS_Config_Actions["actions"];
+  for (int i = 0; i < Actions.size(); i++) {
+    if (SPIFFS_Config_Actions["actions"][i]["id"].as<String>() == String(ID) && SPIFFS_Config_Actions["actions"][i]["type"].as<String>() == "color") {
+      Val = SPIFFS_Config_Actions["actions"][i]["g"].as<String>().toInt();
+      return Val;
+      break;
+    }
+    delay(10);
+  }
+  return Val;
+}
+
+int eeBudServerManager::IndexGetColor_B(int ID) {
+  int Val = 0;
+  JsonArray Actions = SPIFFS_Config_Actions["actions"];
+  for (int i = 0; i < Actions.size(); i++) {
+    if (SPIFFS_Config_Actions["actions"][i]["id"].as<String>() == String(ID) && SPIFFS_Config_Actions["actions"][i]["type"].as<String>() == "color") {
+      Val = SPIFFS_Config_Actions["actions"][i]["b"].as<String>().toInt();
+      return Val;
+      break;
+    }
+    delay(10);
+  }
+  return Val;
+}
+
+
 
 int* eeBudServerManager::IndexAddToogle(String Name, String Value_0, String Value_1, String Default) {
   JsonArray Actions = SPIFFS_Config_Actions["actions"];
@@ -1192,6 +1480,7 @@ String eeBudServerManager::RetourVariable(String var) {
   }
 
 
+
   if (var == "ACTIONS") {
     ScriptConstruct = "";
     ScriptConstruct += "<script>";
@@ -1215,20 +1504,55 @@ String eeBudServerManager::RetourVariable(String var) {
         //RETOUR += "<button id=\"" + SPIFFS_Config_Actions["actions"][i]["nom"].as<String>() + "\" class=\"Bouton\" onclick=\"Click(this)\">" + SPIFFS_Config_Actions["actions"][i]["nom"].as<String>() + "</button><br><br>";
         RETOUR += "<div class=\"TotalBouton\"> <span name=\"fond\" id=\"fond\" class=\"fond_bouton\"></span> <button id=\"" + SPIFFS_Config_Actions["actions"][i]["id"].as<String>() + "\" class=\"Bouton\" onclick=\"Click(this)\" style=\"text-decoration:none\"> " + SPIFFS_Config_Actions["actions"][i]["nom"].as<String>() + " </button> </div>";
 
+      }else if (SPIFFS_Config_Actions["actions"][i]["type"].as<String>() == "html") {
+        String Value = SPIFFS_Config_Actions["actions"][i]["value"].as<String>();       
+        RETOUR += Value;        
+
+      } else if (SPIFFS_Config_Actions["actions"][i]["type"].as<String>() == "title") {
+        String Nom = SPIFFS_Config_Actions["actions"][i]["nom"].as<String>();
+        String ID = SPIFFS_Config_Actions["actions"][i]["id"].as<String>();
+        String Size = SPIFFS_Config_Actions["actions"][i]["size"].as<String>();
+        RETOUR += "<b><div style=\"margin-top: 30px; font-size: " + Size + "px;\">" + Nom + "</div></b>";
+        ScriptConstruct += "source.addEventListener('" + SPIFFS_Config_Actions["actions"][i]["id"].as<String>() + "', function(e) {document.getElementById(\"" + ID + "\").innerHTML = e.data;}, false);";
+
+      } else if (SPIFFS_Config_Actions["actions"][i]["type"].as<String>() == "range") {
+        String Nom = SPIFFS_Config_Actions["actions"][i]["nom"].as<String>();
+        String ID = SPIFFS_Config_Actions["actions"][i]["id"].as<String>();
+        String Min = SPIFFS_Config_Actions["actions"][i]["min"].as<String>();
+        String Max = SPIFFS_Config_Actions["actions"][i]["max"].as<String>();
+        String Value = SPIFFS_Config_Actions["actions"][i]["value"].as<String>();
+
+        RETOUR += "<div style=\"margin-top: 30px;\"><label for=\"" + ID + "\">" + Nom + ": </label><b><output id=\"RV" + ID + "\">" + Value + "</output></b><br><input type=\"range\" id=\"" + ID + "\" name=\"" + ID + "\" min=\"" + Min + "\" max=\"" + Max + "\" value=\"" + Value + "\" oninput=\"RV" + ID + ".value=value\" onchange=\"ValidRange(this)\"/>";
+        ScriptConstruct += "source.addEventListener('" + ID + "', function(e) {document.getElementById(\"" + ID + "\").value = e.data; document.getElementById(\"RV" + ID + "\").innerHTML = e.data; }, false);";
+
       } else if (SPIFFS_Config_Actions["actions"][i]["type"].as<String>() == "info") {
         String Nom = SPIFFS_Config_Actions["actions"][i]["nom"].as<String>();
+        String ID = SPIFFS_Config_Actions["actions"][i]["id"].as<String>();
         String Size = SPIFFS_Config_Actions["actions"][i]["size"].as<String>();
         String Value = SPIFFS_Config_Actions["actions"][i]["value"].as<String>();
         String Unit = SPIFFS_Config_Actions["actions"][i]["unit"].as<String>();
-        RETOUR += "<div style=\"font-size: " + Size + "px;\">" + Nom + ": <b><span id=\"" + Nom + "\">" + Value + "</span></b><span id=\"Unit" + Nom + "\"> " + Unit + "</span></div><br>";
-        ScriptConstruct += "source.addEventListener('" + SPIFFS_Config_Actions["actions"][i]["id"].as<String>() + "', function(e) {document.getElementById(\"" + SPIFFS_Config_Actions["actions"][i]["nom"].as<String>() + "\").innerHTML = e.data;}, false);";
+        RETOUR += "<div style=\"margin-top: 30px; font-size: " + Size + "px;\">" + Nom + ": <b><span id=\"" + ID + "\">" + Value + "</span></b><span id=\"Unit" + ID + "\"> " + Unit + "</span></div>";
+        ScriptConstruct += "source.addEventListener('" + SPIFFS_Config_Actions["actions"][i]["id"].as<String>() + "', function(e) {document.getElementById(\"" + ID + "\").innerHTML = e.data;}, false);";
+
+      } else if (SPIFFS_Config_Actions["actions"][i]["type"].as<String>() == "color") {
+        String Nom = SPIFFS_Config_Actions["actions"][i]["nom"].as<String>();
+        String ID = SPIFFS_Config_Actions["actions"][i]["id"].as<String>();
+        String R = SPIFFS_Config_Actions["actions"][i]["r"].as<String>();
+        String G = SPIFFS_Config_Actions["actions"][i]["g"].as<String>();
+        String B = SPIFFS_Config_Actions["actions"][i]["b"].as<String>();
+        RETOUR += "<div class=\"FondBlanc_Color\" style=\"margin-top: 30px;\">" + Nom + "<input style=\"margin-top: 30px;\" class=\"input_color\" id=\"" + ID + "\" type=\"color\" onchange=\"printColor(this,event)\"/></div><script>var rHex = parseInt(" + R + ").toString(16).padStart(2, '0'); var gHex = parseInt(" + G + ").toString(16).padStart(2, '0');var bHex = parseInt(" + B + ").toString(16).padStart(2, '0'); document.getElementById(\"" + ID + "\").value = '#' + rHex + gHex + bHex; </script>";
+
+        ScriptConstruct += "source.addEventListener('" + ID + "', function(e) {document.getElementById(\"" + ID + "\").value = e.data;}, false);";
 
       } else if (SPIFFS_Config_Actions["actions"][i]["type"].as<String>() == "eeSeg") {
-        RETOUR += "<div class=\"Seg\"></div><br>";
+        RETOUR += "<div style=\"margin-top: 30px;\" class=\"Seg\"></div>";
+
+      } else if (SPIFFS_Config_Actions["actions"][i]["type"].as<String>() == "eeSegw") {
+        RETOUR += "<div style=\"margin-top: 30px;\" class=\"Segw\"></div>";
 
       } else if (SPIFFS_Config_Actions["actions"][i]["type"].as<String>() == "toogle") {
 
-        RETOUR += "<div style=\"font-size: 40px;\">" + SPIFFS_Config_Actions["actions"][i]["nom"].as<String>() + "</div><br>";
+        RETOUR += "<div style=\"margin-top: 30px;\">" + SPIFFS_Config_Actions["actions"][i]["nom"].as<String>() + "</div>";
 
         String Nom = SPIFFS_Config_Actions["actions"][i]["nom"].as<String>();
         String Value0 = SPIFFS_Config_Actions["actions"][i]["value0"].as<String>();
@@ -1237,14 +1561,14 @@ String eeBudServerManager::RetourVariable(String var) {
         String ID1 = SPIFFS_Config_Actions["actions"][i]["id1"].as<String>();
 
         if (SPIFFS_Config_Actions["actions"][i]["state"].as<String>() == Value1) {
-          RETOUR += "<br><div><label class=\"label1\"><div class=\"toggle\"><input class=\"toggle-state\" name=\"" + Nom + "\" id=\"" + Nom + "\" value=\"" + Value1 + "\" type=\"checkbox\" onclick=\"ClickToogle(this,'" + Value0 + "','" + Value1 + "','" + ID0 + "','" + ID1 + "')\" checked><div class=\"toggle-inner\"><div class=\"indicator\"></div></div><div class=\"active-bg\"></div><div id=\"Texte" + Nom + "\" class=\"textd\">" + Value1 + "</div></div></label></div><br>";
+          RETOUR += "<div style=\"margin-top: 20px;\"><label class=\"label1\"><div class=\"toggle\"><input class=\"toggle-state\" name=\"" + ID0 + "\" id=\"" + ID0 + "\" value=\"" + Value1 + "\" type=\"checkbox\" onclick=\"ClickToogle(this,'" + Value0 + "','" + Value1 + "','" + ID0 + "','" + ID1 + "')\" checked><div class=\"toggle-inner\"><div class=\"indicator\"></div></div><div class=\"active-bg\"></div><div id=\"Texte" + ID0 + "\" class=\"textd\">" + Value1 + "</div></div></label></div>";
 
         } else {
-          RETOUR += "<br><div><label class=\"label1\"><div class=\"toggle\"><input class=\"toggle-state\" name=\"" + Nom + "\" id=\"" + Nom + "\" value=\"" + Value1 + "\" type=\"checkbox\" onclick=\"ClickToogle(this,'" + Value0 + "','" + Value1 + "','" + ID0 + "','" + ID1 + "')\"><div class=\"toggle-inner\"><div class=\"indicator\"></div></div><div class=\"active-bg\"></div><div id=\"Texte" + Nom + "\" class=\"textd\">" + Value0 + "</div></div></label></div><br>";
+          RETOUR += "<div style=\"margin-top: 20px;\"><label class=\"label1\"><div class=\"toggle\"><input class=\"toggle-state\" name=\"" + ID0 + "\" id=\"" + ID0 + "\" value=\"" + Value1 + "\" type=\"checkbox\" onclick=\"ClickToogle(this,'" + Value0 + "','" + Value1 + "','" + ID0 + "','" + ID1 + "')\"><div class=\"toggle-inner\"><div class=\"indicator\"></div></div><div class=\"active-bg\"></div><div id=\"Texte" + ID0 + "\" class=\"textd\">" + Value0 + "</div></div></label></div>";
         }
 
-        ScriptConstruct += "source.addEventListener('" + ID0 + "', function(e) {document.getElementById(\"" + Nom + "\").checked = false; document.getElementById(\"Texte" + Nom + "\").innerHTML = '" + Value0 + "';  }, false);";
-        ScriptConstruct += "source.addEventListener('" + ID1 + "', function(e) {document.getElementById(\"" + Nom + "\").checked = true; document.getElementById(\"Texte" + Nom + "\" ).innerHTML = '" + Value1 + "';  }, false);";
+        ScriptConstruct += "source.addEventListener('" + ID0 + "', function(e) {document.getElementById(\"" + ID0 + "\").checked = false; document.getElementById(\"Texte" + ID0 + "\").innerHTML = '" + Value0 + "';  }, false);";
+        ScriptConstruct += "source.addEventListener('" + ID1 + "', function(e) {document.getElementById(\"" + ID0 + "\").checked = true; document.getElementById(\"Texte" + ID0 + "\" ).innerHTML = '" + Value1 + "';  }, false);";
       }
       if (i == Actions.size() - 1) {
         ScriptConstruct += "}</script>";

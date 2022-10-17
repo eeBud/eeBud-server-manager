@@ -121,11 +121,21 @@ const char Page_Index[] PROGMEM = R"rawliteral(
             margin-left: -10px;
             margin-right: -10px;
             margin-top: -30px;
+            padding-bottom:30px;
         }
 
         .Seg {
             position: relative;
             background-color: rgba(30,80,100,1);
+            border-radius: 5px;          
+            margin-left: 30px;
+            margin-right: 30px;
+            height: 10px;            
+        }
+
+        .Segw {
+            position: relative;
+            background-color: white;
             border-radius: 5px;          
             margin-left: 30px;
             margin-right: 30px;
@@ -140,6 +150,7 @@ const char Page_Index[] PROGMEM = R"rawliteral(
             font-weight: bold;
             word-wrap: break-word;
             font-size: 80px;
+            
         }
 
         .SousTitre {
@@ -159,6 +170,7 @@ const char Page_Index[] PROGMEM = R"rawliteral(
             background-color: rgba(255,255,255,1);
             text-align: center;
             color: rgba(30,80,100,1);
+            font-size: 50px;
             
             
         }       
@@ -228,6 +240,17 @@ const char Page_Index[] PROGMEM = R"rawliteral(
             display: flex;
         }
 
+        .fond_couleur {
+          	margin-left: auto;
+    				margin-right: auto;
+            width: 800px;
+            height: 90px;
+            border: 2px solid #145F77;
+            background-image: linear-gradient(90deg,rgba(30,80,100,1), #FFFFFF,rgba(30,80,100,1) );            
+            animation: 1s linear infinite alternate slidebg;            
+            display: flex;
+        }
+
             
 
         @keyframes slidebg {
@@ -240,6 +263,70 @@ const char Page_Index[] PROGMEM = R"rawliteral(
             }
         }
 
+        input[type=range] {
+          margin-top:50px;  
+  				-webkit-appearance: none;  
+  				width: 850px;
+				}
+      
+				input[type=range]:focus {
+  				outline: none;
+				}
+				input[type=range]::-webkit-slider-runnable-track {
+  				width: 850px;
+  				height: 8px;
+  				cursor: pointer;
+  				animate: 0.2s;
+  				background: #d6d6d6;
+  				border-radius: 8px;
+  				border: 0px solid #000000;
+				}
+      
+				input[type=range]::-webkit-slider-thumb {
+ 					box-shadow: 0px 0px 0px #000000;
+  				border: 0px solid #000000;
+  				height: 50px;
+  				width: 80px;
+  				border-radius: 25px;
+  				background: rgba(30,80,100,1);
+  				cursor: pointer;
+  				-webkit-appearance: none;
+  				margin-top: -21px;
+				}
+
+        .input_color {
+  				appearance:none;
+  				width: 140px;
+  				height: 140px;
+  				background-color: transparent;
+          border: none;
+          position: absolute;
+          right:-10px;
+          top:-30px;
+                  
+				}
+      	
+      	.input_color::-webkit-color-swatch {
+        	border-radius: 20px;
+        	
+      	}
+      
+      	.FondBlanc_Color {
+            position: relative;
+            font-family: 'Roboto', sans-serif;
+            background-color: rgba(255,255,255,1);
+            text-align: left;
+            color: rgba(30,80,100,1);
+            font-size: 50px;            
+        		height: 140px;
+        		width: 650px;
+        		line-height: 140px;       				
+        
+        		margin-left: auto;
+    				margin-right: auto;
+            
+        	}
+
     </style>
   </head>
   <body>
@@ -250,12 +337,12 @@ const char Page_Index[] PROGMEM = R"rawliteral(
       <button class="BoutonBlanc" onclick="window.location.href = '/load?nav=config';" style="text-decoration:none">            
         Configuration           
       </button>
-      <h1 class="Titre">%APP%</h1>
-      <h2 class="SousTitre">Accueil</h2><br>
+      <h1 class="Titre">%APP%</h1>  
     </div>
-    <div class="FondBlanc"><br> 
+    <div style="margin-top: 30px;" class="FondBlanc">
         
-      %ACTIONS%
+      %ACTIONS%      
+      
       <br>       
         
     </div>
@@ -278,6 +365,24 @@ const char Page_Index[] PROGMEM = R"rawliteral(
           document.getElementById("Texte" + element.id + "").innerHTML = "" + value0 + ""; 
           
         }    
+        xhr.send();
+      }
+
+      function printColor(element, ev) {
+          const color = ev.target.value;
+          const r = parseInt(color.substr(1, 2), 16);
+          const g = parseInt(color.substr(3, 2), 16);
+          const b = parseInt(color.substr(5, 2), 16);
+          var xhr = new XMLHttpRequest();
+          xhr.open("POST", "/update?send_color="+element.id+"&r="+r+"&g="+g+"&b="+b+"", true);
+          xhr.send();
+          
+      }
+
+      
+      function ValidRange(element) {        
+        var xhr = new XMLHttpRequest();
+        xhr.open("POST", "/update?send_range="+element.id+"&value="+element.value+"", true);
         xhr.send();
       }
 
