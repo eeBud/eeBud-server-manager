@@ -1,7 +1,8 @@
 # Bibliothèque ESP32
 
 ## Nouveautés
-Version: 1.1
+Version: 1.1:
+
   -Ajout de fonctions:
   
     -IndexAddTitle
