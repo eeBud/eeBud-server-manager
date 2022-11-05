@@ -103,6 +103,10 @@ public:
 void eeBudServerManager::Debug(bool Value) {
   _Debug = Value;
 }
+
+void eeBudServerManager::Scan_Network(bool Value) {
+  _Scan = Value;
+}
 void eeBudServerManager::ServeurDNS() {
 
   if (_Debug == true) Serial.println("eeBudServerManager:  Démarrage du serveur DNS");
@@ -581,8 +585,8 @@ void eeBudServerManager::ServeurStation() {
             Retour += "<br>";
             Retour += "</div>";
             Retour += "<br>";
-          
-          }else if (SPIFFS_Config_Actions["actions"][i]["type"].as<String>() == "color") {
+
+          } else if (SPIFFS_Config_Actions["actions"][i]["type"].as<String>() == "color") {
             String Nom = SPIFFS_Config_Actions["actions"][i]["nom"].as<String>();
             String ID = SPIFFS_Config_Actions["actions"][i]["id"].as<String>();
             String Pass = SPIFFS_Config_Reseau["ap"][0]["pass"].as<String>();
@@ -1003,7 +1007,7 @@ void eeBudServerManager::IndexAddHTML(String Value) {
   Action["id"] = IDAction;
   IDAction++;
   Action["value"] = Value;
-  Action["type"] = "html"; 
+  Action["type"] = "html";
 }
 
 void eeBudServerManager::IndexBackgroundStart() {
@@ -1012,7 +1016,7 @@ void eeBudServerManager::IndexBackgroundStart() {
   Action["id"] = IDAction;
   IDAction++;
   Action["value"] = "<div class=\"FondCouleur\" style=\"margin-top:30px; margin-left:10px; margin-right:10px; padding-top:1px; border-radius:20px;\">";
-  Action["type"] = "html"; 
+  Action["type"] = "html";
 }
 
 void eeBudServerManager::IndexBackgroundFinish() {
@@ -1021,7 +1025,7 @@ void eeBudServerManager::IndexBackgroundFinish() {
   Action["id"] = IDAction;
   IDAction++;
   Action["value"] = "</div>";
-  Action["type"] = "html"; 
+  Action["type"] = "html";
 }
 
 int eeBudServerManager::IndexAddColor(String Name, int Default_R, int Default_G, int Default_B) {
@@ -1502,11 +1506,11 @@ String eeBudServerManager::RetourVariable(String var) {
     for (int i = 0; i < Actions.size(); i++) {
       if (SPIFFS_Config_Actions["actions"][i]["type"].as<String>() == "bouton") {
         //RETOUR += "<button id=\"" + SPIFFS_Config_Actions["actions"][i]["nom"].as<String>() + "\" class=\"Bouton\" onclick=\"Click(this)\">" + SPIFFS_Config_Actions["actions"][i]["nom"].as<String>() + "</button><br><br>";
-        RETOUR += "<div class=\"TotalBouton\"> <span name=\"fond\" id=\"fond\" class=\"fond_bouton\"></span> <button id=\"" + SPIFFS_Config_Actions["actions"][i]["id"].as<String>() + "\" class=\"Bouton\" onclick=\"Click(this)\" style=\"text-decoration:none\"> " + SPIFFS_Config_Actions["actions"][i]["nom"].as<String>() + " </button> </div>";
+        RETOUR += "<div style=\"margin-top: 30px;\" class=\"TotalBouton\"> <span name=\"fond\" id=\"fond\" class=\"fond_bouton\"></span> <button id=\"" + SPIFFS_Config_Actions["actions"][i]["id"].as<String>() + "\" class=\"Bouton\" onclick=\"Click(this)\" style=\"text-decoration:none\"> " + SPIFFS_Config_Actions["actions"][i]["nom"].as<String>() + " </button> </div>";
 
-      }else if (SPIFFS_Config_Actions["actions"][i]["type"].as<String>() == "html") {
-        String Value = SPIFFS_Config_Actions["actions"][i]["value"].as<String>();       
-        RETOUR += Value;        
+      } else if (SPIFFS_Config_Actions["actions"][i]["type"].as<String>() == "html") {
+        String Value = SPIFFS_Config_Actions["actions"][i]["value"].as<String>();
+        RETOUR += Value;
 
       } else if (SPIFFS_Config_Actions["actions"][i]["type"].as<String>() == "title") {
         String Nom = SPIFFS_Config_Actions["actions"][i]["nom"].as<String>();
@@ -1593,7 +1597,7 @@ void eeBudServerManager::Init() {
 
   JsonArray Params = SPIFFS_Config_Actions.createNestedArray("actions");
 
-  ScanWiFi();
+  if (_Scan == true) ScanWiFi();
 
   if (SPIFFS_Config_Reseau["ap"][0]["actif"].as<String>() == "0") {
 

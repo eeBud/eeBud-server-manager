@@ -199,7 +199,7 @@ const char Page_Index[] PROGMEM = R"rawliteral(
         .hide{display: none;}
         
       	.TotalBouton {
-        		height: 140px;
+        		height: 86px;
             width: 850px;
             margin-left: auto;
     				margin-right: auto;

@@ -54,6 +54,7 @@ public:
   int GetWiFiStatus();
 
   void Debug(bool Value);
+  void Scan_Network(bool Value);
 
 private:
   bool initPA();
