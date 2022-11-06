@@ -20,9 +20,7 @@ void setup() {
     delay(500);
   }
   paj.setGestureHighRate(true);
-
-  pinMode(LED, OUTPUT);
-  blynk(4, 100);
+ 
 }
 
 
