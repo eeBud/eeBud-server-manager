@@ -24,6 +24,7 @@ public:
 
   //Loop
   int IndexGetEvent();
+  //Ajouter HANDLE
 
   //Autre
   String GetParamText(String Name);
@@ -44,6 +45,7 @@ public:
   void IndexAddSegWhite();
 
   void IndexSetInfo(int ID, String Value);
+  void IndexSetRange(int ID, int Value);
   void IndexSetToogle(int ID);
 
   void IndexResetEvent();

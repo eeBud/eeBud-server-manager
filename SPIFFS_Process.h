@@ -2,7 +2,7 @@
 #define JSON_CONFIG_Params "/params.json"
 
 DynamicJsonDocument SPIFFS_Config_Reseau(1024);
-DynamicJsonDocument SPIFFS_Config_Params(2048);
+DynamicJsonDocument SPIFFS_Config_Params(4096);
 
 String SPIFFS_ID = "null";
 String SPIFFS_SSID = "null";

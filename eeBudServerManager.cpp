@@ -5,6 +5,9 @@
 #include <ArduinoJson.h>
 #include <HTTPClient.h>
 #include <DNSServer.h>
+#include <ESPmDNS.h>
+#include <WiFiUdp.h>
+#include <ArduinoOTA.h>
 
 
 #include "eeBudServerManager.h"
@@ -874,7 +877,7 @@ int eeBudServerManager::IndexGetEvent() {
         }
       }
     }
-
+    ArduinoOTA.handle();
     return Action;
   }
 }
@@ -955,6 +958,24 @@ int eeBudServerManager::IndexAddRange(String Name, int Min, int Max, int Default
   Action["min"] = Min;
   Action["max"] = Max;
   return IDAction - 1;
+}
+
+void eeBudServerManager::IndexSetRange(int ID, int Value) {
+  JsonArray Actions = SPIFFS_Config_Actions["actions"];
+  for (int i = 0; i < Actions.size(); i++) {
+    if (SPIFFS_Config_Actions["actions"][i]["id"].as<String>() == String(ID)) {
+      SPIFFS_Config_Actions["actions"][i]["value"] = Value;
+      char cID[5] = "";
+      sprintf(cID, "%d", ID);
+
+      String SValue = String(Value);
+      char CValue[50];
+      SValue.toCharArray(CValue, 50);
+      events.send(CValue, cID, millis());
+      break;
+    }
+    delay(10);
+  }
 }
 
 int eeBudServerManager::IndexGetRange(int ID) {
@@ -1589,6 +1610,9 @@ void eeBudServerManager::Init() {
   if (_Debug == true) Serial.println("\n\neeBudServerManager:  !!!---------------------------------------------------------------------------------------------------------!!!  \n\n");
   delay(100);
 
+
+
+
   SPIFFS_Initialisation();
   if (!SPIFFS.exists("/reseau.json")) SPIFFS_CreationConfigReseau();
   if (!SPIFFS.exists("/params.json")) SPIFFS_CreationConfigParams();
@@ -1608,6 +1632,37 @@ void eeBudServerManager::Init() {
       if (initWiFi()) {
         ModeAP = false;
         ServeurStation();
+
+        /////////////////////////
+        ArduinoOTA
+          .onStart([]() {
+            String type;
+            if (ArduinoOTA.getCommand() == U_FLASH)
+              type = "sketch";
+            else  // U_SPIFFS
+              type = "filesystem";
+
+            // NOTE: if updating SPIFFS this would be the place to unmount SPIFFS using SPIFFS.end()
+            Serial.println("Start updating " + type);
+          })
+          .onEnd([]() {
+            Serial.println("\nEnd");
+          })
+          .onProgress([](unsigned int progress, unsigned int total) {
+            Serial.printf("Progress: %u%%\r", (progress / (total / 100)));
+          })
+          .onError([](ota_error_t error) {
+            Serial.printf("Error[%u]: ", error);
+            if (error == OTA_AUTH_ERROR) Serial.println("Auth Failed");
+            else if (error == OTA_BEGIN_ERROR) Serial.println("Begin Failed");
+            else if (error == OTA_CONNECT_ERROR) Serial.println("Connect Failed");
+            else if (error == OTA_RECEIVE_ERROR) Serial.println("Receive Failed");
+            else if (error == OTA_END_ERROR) Serial.println("End Failed");
+          });
+
+        ArduinoOTA.begin();
+
+        //////////////////////////
       } else {
         if (initPA()) {
           ModeAP = true;
